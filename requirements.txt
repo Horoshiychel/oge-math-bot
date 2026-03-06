@@ -1,2 +1,2 @@
 python-telegram-bot==20.7
-gigachat==0.1.43
+gigachat==0.2.0
