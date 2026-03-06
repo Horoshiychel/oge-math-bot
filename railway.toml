@@ -2,5 +2,4 @@
 builder = "NIXPACKS"
 
 [deploy]
-restartPolicyType = "ONCE"
-restartPolicyMaxRetries = 10
+startCommand = "python oge_bot.py"
