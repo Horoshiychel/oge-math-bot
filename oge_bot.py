@@ -5,19 +5,11 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Cont
 ssl._create_default_https_context = ssl._create_unverified_context
 
 def clean_text(text):
-    if not text: 
-        return "Нет ответа"
+    if not text: return "Нет ответа"
     replacements = {
-        '*': '', 
-        '_': '', 
-        '`': '', 
-        '\\': '', 
-        '[': ' ', 
-        ']': ' ', 
-        '(': ' ', 
-        ')': ' ', 
-        '<': ' ', 
-        '>': ' '
+        '*': '', '_': '', '`': '', '\\': '',
+        '[': ' ', ']': ' ', '(': ' ', ')': ' ',
+        '<': ' ', '>': ' '
     }
     for bad, good in replacements.items():
         text = text.replace(bad, good)
@@ -51,8 +43,7 @@ async def start(update: Update, context):
     ai_status = "🧠 GigaChat ✅" if giga else "📚 JSON"
     await update.message.reply_text(
         f"🤖 *ОГЭ Математика Helper*\n\n📚 {total_tasks} задач\n{ai_status}",
-        parse_mode="Markdown", 
-        reply_markup=reply_markup
+        parse_mode="Markdown", reply_markup=reply_markup
     )
 
 async def button(update: Update, context):
@@ -61,50 +52,43 @@ async def button(update: Update, context):
     user_id = query.from_user.id
     
     if query.data in TASKS:
-        if user_id not in user_data:
-            user_data[user_id] = {"stats": {"correct": 0, "total": 0}}
         task = random.choice(TASKS[query.data])
-        user_data[user_id]["current_task"] = task
+        user_data[user_id] = {"current_task": task, "stats": user_data.get(user_id, {}).get("stats", {"correct": 0, "total": 0})}
         
-        keyboard = [
-            [InlineKeyboardButton(f"{chr(65+i)}. {opt}", callback_data=f"ans_{i}")
-             for i, opt in enumerate(task["options"])],
-            [InlineKeyboardButton("❓ Подсказка", callback_data="hint")]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
+        keyboard = [[InlineKeyboardButton(f"{chr(65+i)}. {opt}", callback_data=f"ans_{i}") 
+                    for i, opt in enumerate(task["options"])], 
+                   [InlineKeyboardButton("❓ Подсказка", callback_data="hint")]]
         await query.edit_message_text(
             f"📝 *Задача #{task['id']} ({query.data.title()})*\n\n{task['question']}",
-            parse_mode="Markdown", reply_markup=reply_markup
+            parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard)
         )
     
     elif query.data.startswith("ans_"):
         answer_idx = int(query.data.split("_")[1])
         task = user_data[user_id]["current_task"]
         stats = user_data[user_id]["stats"]
-        
         stats["total"] += 1
         correct = answer_idx == task["answer"]
-        if correct: 
-            stats["correct"] += 1
+        if correct: stats["correct"] += 1
         
-        theme = next(iter(TASKS), "геометрия")
         keyboard = [
             [InlineKeyboardButton("🤖 GigaChat", callback_data="giga")],
-            [InlineKeyboardButton("➡️ Новая", callback_data=theme),
+            [InlineKeyboardButton("➡️ Новая", callback_data="геометрия"),
              InlineKeyboardButton("📊 Статистика", callback_data="stats")],
             [InlineKeyboardButton("🏠 Меню", callback_data="menu")]
         ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        
         result = "✅ *Правильно!*" if correct else f"❌ *Ответ:* {chr(65+task['answer'])}"
         await query.edit_message_text(
             f"{result}\n\n📋 *Решение:*\n`{task['solution']}`\n\n_🔥 GigaChat разберёт подробно!_",
-            parse_mode="Markdown", reply_markup=reply_markup
+            parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
 if __name__ == "__main__":
     print("🚀 ОГЭ-бот запущен!")
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button))
-    app.run_polling(drop_pending_updates=True)
+    if not BOT_TOKEN:
+        print("❌ BOT_TOKEN не найден!")
+    else:
+        app = Application.builder().token(BOT_TOKEN).build()
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CallbackQueryHandler(button))
+        app.run_polling(drop_pending_updates=True)
