@@ -11,7 +11,7 @@ def clean_text(text):
     for bad, good in replacements.items(): text = text.replace(bad, good)
     return text.strip()[:3500]
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("8650646242:AAF4HfvILHLFfsJgFeBZYt5D9PjOkxfh6ds")
 GIGACHAT_TOKEN = os.getenv("MDE5Y2JjYTktMjg5OC03Mzg4LWI2ZjEtMjE2ZjFiYzFkZWNlOjc5Nzk5NDIyLTkwOWYtNDFiMy1iZGJhLThkZGZhYjIzOTlhZg==")
 GIGACHAT_AVAILABLE = bool(GIGACHAT_TOKEN and GIGACHAT_TOKEN.strip())
 
